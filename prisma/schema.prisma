@@ -1,0 +1,237 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
+  // output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== ENUMS =====
+enum AttachmentType {
+  IMAGE     // jpg/png/heic/webp
+  DOCUMENT  // pdf/doc/xls/zip dst
+}
+
+enum AttachmentCategory {
+  REQUEST_FORM        // dokumen pendukung saat ajukan
+  APPROVAL_DOCUMENT   // surat persetujuan
+  EVENT_PROOF         // FOTO BUKTI SETELAH KEGIATAN
+  OTHER
+}
+
+enum ServiceType {
+  service
+  room
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PARTIALLY_APPROVED
+  CANCELLED
+  FINISH
+}
+
+enum ServiceApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PARTIALLY_APPROVED
+}
+
+// ---------- USERS ----------
+model users {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  name       String   @db.VarChar(150)
+  email      String   @unique @db.VarChar(150)
+  role       String?  @db.VarChar(50)
+  password   String   @db.VarChar(255)
+
+  // relations (back-relation)
+  requests            room_requests[]          @relation("Requester")
+  approvedRequests    room_requests[]          @relation("OverallApprover")
+  approvedServices    room_request_services[]  @relation("ServiceApprover")
+  request_attachments request_attachments[]
+
+  createdAt  DateTime @default(now()) @db.Timestamp(3)
+  updatedAt  DateTime @updatedAt      @db.Timestamp(3)
+
+  room_requests room_requests[] @relation("OverallRejector")
+  schedules schedules[]
+}
+
+// ---------- SERVICES ----------
+model services {
+  id            String   @id @default(uuid()) @db.VarChar(36)
+  name          String   @unique @db.VarChar(100)
+  description   String?  @db.VarChar(255)
+  unit          String?  @db.VarChar(30)
+  active        Boolean  @default(true)
+  maxPerRequest Int?
+  type          ServiceType @default(service)
+
+  requestDetails room_request_services[]
+
+  createdAt    DateTime @default(now()) @db.Timestamp(3)
+  updatedAt    DateTime @updatedAt      @db.Timestamp(3)
+
+  room_requests room_requests[] @relation("rooms")
+}
+
+// ---------- ROOM REQUESTS ----------
+model room_requests {
+  id            String   @id @default(uuid()) @db.VarChar(36)
+
+  roomId        String @db.VarChar(36)
+  rooms services @relation("rooms", fields: [roomId], references: [id])
+
+  /// Pengaju internal (user sistem)
+  requesterId   String   @db.VarChar(36)
+  requester     users    @relation("Requester", fields: [requesterId], references: [id])
+
+  /// Identitas & ringkasan kegiatan
+  requestNumber String   @unique @db.VarChar(30)  // contoh: RR-2025-000123
+  title         String   @db.VarChar(150)         // judul/nama kegiatan
+  purpose       String?  @db.VarChar(255)
+  note          String?  @db.VarChar(255)
+
+  /// Jadwal
+  startAt       DateTime
+  endAt         DateTime
+
+  /// Peminjam/penanggung jawab (bisa eksternal)
+  borrowerName          String? @db.VarChar(100)  // siapa yang mau pinjam
+  borrowerOrganization  String? @db.VarChar(150)  // instansi/komunitas
+  borrowerPhone         String? @db.VarChar(30)
+  borrowerEmail         String? @db.VarChar(150)
+
+  /// Lokasi (jika offsite / butuh alamat lengkap)
+  isOffsite     Boolean  @default(false)
+  addressLine   String?  @db.VarChar(255)
+  district      String?  @db.VarChar(100)
+  city          String?  @db.VarChar(100)
+  province      String?  @db.VarChar(100)
+  postalCode    String?  @db.VarChar(20)
+
+  /// Logistik kegiatan
+  attendeesCount        Int?                      // perkiraan peserta
+  requireCatering       Boolean @default(false)
+  requireItSupport      Boolean @default(false)
+  equipment             Json?                     // daftar alat (projector, mic, dll)
+  additionalRequirements String? @db.Text         // kebutuhan lain
+
+  /// ACC keseluruhan
+  status        RequestStatus @default(PENDING)
+  approvedById  String?  @db.VarChar(36)
+  approvedBy    users?   @relation("OverallApprover", fields: [approvedById], references: [id])
+  approvedAt    DateTime?
+
+  /// Penolakan (opsional, jika workflow-mu pakai REJECTED)
+  rejectedById     String? @db.VarChar(36)
+  rejectedBy       users?  @relation("OverallRejector", fields: [rejectedById], references: [id])
+  rejectedAt       DateTime?
+  rejectionReason  String? @db.VarChar(255)
+
+  /// Relasi detail
+  services     room_request_services[]
+  attachments  request_attachments[]
+
+  /// Audit
+  createdAt    DateTime @default(now()) @db.Timestamp(3)
+  updatedAt    DateTime @updatedAt      @db.Timestamp(3)
+
+  @@index([requesterId, startAt])
+  @@index([status, startAt])
+  @@map("room_requests")
+}
+
+// ---------- DETAIL SERVICES PER REQUEST ----------
+model room_request_services {
+  id            String   @id @default(uuid()) @db.VarChar(36)
+
+  roomRequestId String   @db.VarChar(36)
+  roomRequest   room_requests @relation(fields: [roomRequestId], references: [id], onDelete: Cascade)
+
+  serviceId     String   @db.VarChar(36)
+  service       services @relation(fields: [serviceId], references: [id])
+
+  requestedQty  Int
+  approvedQty   Int?
+
+  status        ServiceApprovalStatus @default(PENDING)
+  approverId    String? @db.VarChar(36)
+  approver      users?  @relation("ServiceApprover", fields: [approverId], references: [id])
+  approvalNote  String? @db.VarChar(255)
+
+  attachments   request_attachments[]
+
+  createdAt     DateTime @default(now()) @db.Timestamp(3)
+  updatedAt     DateTime @updatedAt      @db.Timestamp(3)
+
+  @@unique([roomRequestId, serviceId])
+  @@map("room_request_services")
+}
+
+// ---------- ATTACHMENTS ----------
+model request_attachments {
+  id             String   @id @default(uuid()) @db.VarChar(36)
+
+  roomRequestId  String   @db.VarChar(36)
+  roomRequest    room_requests @relation(fields: [roomRequestId], references: [id], onDelete: Cascade)
+
+  roomRequestServiceId String? @db.VarChar(36)
+  roomRequestService   room_request_services? @relation(fields: [roomRequestServiceId], references: [id], onDelete: SetNull)
+
+  type           AttachmentType
+  category       AttachmentCategory @default(OTHER)
+
+  fileName       String?   @db.VarChar(200)
+  originalName   String?   @db.VarChar(200)
+  mimeType       String?   @db.VarChar(100)
+  sizeBytes      Int?
+  url            String   @db.VarChar(500)
+  storageBucket  String?  @db.VarChar(100)
+  checksum       String?  @db.VarChar(128)
+  width          Int?
+  height         Int?
+  exif           Json?
+
+  uploadedById   String?  @db.VarChar(36)
+  uploadedBy     users?   @relation(fields: [uploadedById], references: [id])
+
+  note           String?  @db.VarChar(255)
+
+  createdAt      DateTime? @default(now()) @db.Timestamp(3)
+  updatedAt      DateTime? @updatedAt      @db.Timestamp(3)
+  deletedAt      DateTime?                @db.Timestamp(3)
+
+  @@index([roomRequestId, category])
+  @@index([roomRequestServiceId])
+  @@index([type])
+  @@map("request_attachments")
+}
+
+model schedules {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  userId          String @db.VarChar(36)
+  startAt         DateTime
+  endAt           DateTime
+  description     String @db.Text()
+
+  users users?   @relation(fields: [userId], references: [id])
+
+  userCreate      String? @db.VarChar(36)
+  createdAt       DateTime? @default(now()) @db.Timestamp(3)
+  updatedAt       DateTime? @updatedAt      @db.Timestamp(3)
+  deletedAt       DateTime?                @db.Timestamp(3)
+}

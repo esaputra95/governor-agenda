@@ -10,7 +10,10 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  // extend config bawaan Next.js
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+
+  // global ignore
   {
     ignores: [
       "node_modules/**",
@@ -18,7 +21,26 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "prisma/**", // hasil generate Prisma
+      "src/generated/**", // hasil generate (mis. zod, api client)
     ],
+  },
+
+  // global rules (berlaku di semua file)
+  {
+    rules: {
+      "react-hooks/exhaustive-deps": "off", // ⬅️ disable global
+    },
+  },
+
+  // override untuk file deklarasi (opsional tambahan)
+  {
+    files: ["**/*.d.ts"],
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "no-undef": "off",
+    },
   },
 ];
 

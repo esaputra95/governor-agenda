@@ -13,15 +13,22 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+
+    // ✅ penting untuk alias "@/..."
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"] },
+
+    // ✅ penting agar augmentasi NextAuth terbaca & no 'any'
+    "types": ["next-auth", "node"],
+
+    "plugins": [{ "name": "next" }]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/types/**/*.d.ts" // ✅ pastikan folder augmentasi ikut
+  ],
   "exclude": ["node_modules"]
 }
