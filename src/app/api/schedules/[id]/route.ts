@@ -40,7 +40,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 }
 
 // PATCH /api/schedules/:id
-export async function PATCH(req: NextRequest, ctx: Ctx) {
+export async function PUT(req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
 
   const body = await req.json().catch(() => ({}));
@@ -77,36 +77,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 export async function DELETE(req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
 
-  // default dari query ?hard=true
-  let hard = req.nextUrl.searchParams.get("hard") === "true";
-
-  // kalau body kirim { hardDelete: boolean }, override nilai dari query
-  try {
-    const body = await req.json();
-    if (typeof body?.hardDelete === "boolean") {
-      hard = body.hardDelete;
-    }
-  } catch {
-    // tidak ada body -> abaikan
-  }
-
-  const existing = await prisma.schedules.findUnique({ where: { id } });
-  if (!existing) return json({ message: "Schedule not found" }, 404);
-
-  if (hard) {
-    await prisma.schedules.delete({ where: { id } });
-    return new NextResponse(null, { status: 204 });
-  }
-
-  if (existing.deletedAt) {
-    // idempotent
-    return new NextResponse(null, { status: 204 });
-  }
-
-  await prisma.schedules.update({
-    where: { id },
-    data: { deletedAt: new Date() },
-  });
-
+  await prisma.schedules.delete({ where: { id } });
   return new NextResponse(null, { status: 204 });
 }

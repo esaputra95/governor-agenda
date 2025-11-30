@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   session: { strategy: "jwt" },
   providers: [
     Credentials({
@@ -34,7 +35,7 @@ export const authOptions: NextAuthOptions = {
           id: dbUser.id,
           name: dbUser.name,
           email: dbUser.email,
-          role: (dbUser.role as "ADMIN" | "USER" | null) ?? null,
+          role: dbUser.role as "ADMIN" | "USER" | "Gubernur" | string,
         };
         return user;
       },
@@ -46,14 +47,14 @@ export const authOptions: NextAuthOptions = {
       // 'token' & 'user' sudah diaugment, jadi aman tanpa any
       if (user) {
         token.id = user.id;
-        token.role = user.role ?? null;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id;
-        session.user.role = token.role ?? null;
+        session.user.role = token.role;
       }
       return session;
     },

@@ -29,6 +29,12 @@ const UserTable = ({
         filterable: true,
       },
       {
+        header: "Jabatan",
+        accessor: "role",
+        sortable: true,
+        filterable: true,
+      },
+      {
         header: "Aksi",
         accessor: "id",
         render: (row: PublicType) => (

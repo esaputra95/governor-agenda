@@ -101,13 +101,23 @@ const UserForm: FC<Props> = ({ onCancel, initialValues, mode }) => {
           required
         />
       )}
+
       <SelectInput
-        label="Role"
+        label="Jabatan"
         disabled={mode === "view"}
         {...register("role")}
         option={[
-          { label: "Gubernur", value: "Gubernur" },
-          { label: "Admin", value: "Admin" },
+          {
+            label: "Super Admin (Full Access)",
+            value: "SUPER_ADMIN",
+          },
+          { label: "Approver", value: "APPROVER" },
+          { label: "Admin", value: "ADMIN" },
+          { label: "Staff", value: "STAFF" },
+          { label: "Gubernur", value: "GUBERNUR" },
+          { label: "Wakil Gubernur", value: "WAKIL_GUBERNUR" },
+          { label: "Sekda", value: "SEKDA" },
+          { label: "Kaba Umum", value: "KABA_UMUM" },
         ]}
         errors={errors.role?.message}
       />

@@ -8,12 +8,22 @@ import { cn } from "@/utils/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import dayjs from "dayjs";
 
 const RequestReport = () => {
   const [data, setData] = useState<DataReportType[]>();
   const mutate = useGetReport(apiUrl.scheduleReport);
+
+  // Set default values: awal dan akhir bulan ini
+  const startOfMonth = dayjs().startOf("month").format("YYYY-MM-DD");
+  const endOfMonth = dayjs().endOf("month").format("YYYY-MM-DD");
+
   const { register, watch } = useForm<ReportType>({
     resolver: zodResolver(reportSchema),
+    defaultValues: {
+      endAt: startOfMonth,
+      startAt: endOfMonth,
+    },
   });
 
   const handleOnClick = async (start: string, end: string) => {

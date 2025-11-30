@@ -11,6 +11,7 @@ export type NavItem = {
   label: string;
   path: string;
   active?: boolean;
+  role?: string[];
 };
 
 export type NavGroup = {
@@ -26,6 +27,7 @@ export const navGroups: NavGroup[] = [
         icon: FiLayers,
         label: "Dashboard",
         path: "/",
+        role: ["SUPER_ADMIN", "APPROVER", "ADMIN", "STAFF"],
       },
     ],
   },
@@ -36,11 +38,13 @@ export const navGroups: NavGroup[] = [
         icon: FiLayers,
         label: "Layanan",
         path: "/masters/services",
+        role: ["SUPER_ADMIN"],
       },
       {
         icon: FiUsers,
         label: "Pengguna",
         path: "/masters/users",
+        role: ["SUPER_ADMIN"],
       },
     ],
   },
@@ -51,11 +55,13 @@ export const navGroups: NavGroup[] = [
         icon: FiFilePlus,
         label: "Pengajuan Kegiatan",
         path: "/submissions/requests",
+        role: ["SUPER_ADMIN", "APPROVER", "ADMIN", "STAFF"],
       },
       {
         icon: FiFile,
         label: "Jadwal Kegiatan",
         path: "/submissions/schedules",
+        role: ["SUPER_ADMIN", "APPROVER", "ADMIN"],
       },
     ],
   },
@@ -66,11 +72,13 @@ export const navGroups: NavGroup[] = [
         icon: FiFileText,
         label: "Laporan Pengajuan",
         path: "/reports/request-reports",
+        role: ["SUPER_ADMIN", "APPROVER", "ADMIN"],
       },
       {
         icon: FiFileText,
         label: "Laporan Jadwal Kegiatan",
         path: "/reports/schedule-reports",
+        role: ["SUPER_ADMIN", "APPROVER", "ADMIN"],
       },
     ],
   },

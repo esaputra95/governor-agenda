@@ -17,6 +17,7 @@ import { FC, useEffect } from "react";
 import AsyncSelectInput from "@/components/ui/inputs/SelectInputAsync";
 import { useFetchUserOptions } from "@/hooks/masters/useUsers";
 import { MultiValue, SingleValue } from "react-select";
+import { toDatetimeLocal } from "@/utils/dateTime";
 
 type Props = {
   onCancel?: () => void;
@@ -37,12 +38,18 @@ const SchedulesForm: FC<Props> = ({ onCancel, initialValues, mode }) => {
     resolver: zodResolver(FormSchema),
   });
 
+  console.log({ errors });
+
   const { options, schedulesOption } = useFetchUserOptions();
 
   useEffect(() => {
     if (initialValues) {
+      console.log({ initialValues });
+
       reset({
         ...initialValues,
+        startAt: toDatetimeLocal(initialValues.startAt),
+        endAt: toDatetimeLocal(initialValues.endAt),
       });
     }
   }, [initialValues, reset]);

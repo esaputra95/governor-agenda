@@ -17,8 +17,6 @@ const Users = () => {
   const { data, isLoading, isError } = useUsers();
   const deleteUser = useDeleteUser();
 
-  console.log("render users");
-
   useEffect(() => {
     if (isError) {
       toast.error("Gagal memuat data user - " + isError);

@@ -1,3 +1,4 @@
+"use client";
 import ActionButton from "@/components/ui/buttons/ActionButton";
 import { Column, Table } from "@/components/ui/tables/Table";
 import {
@@ -11,6 +12,7 @@ import { RequestDetailTable } from "@/types/requestDetailSchema";
 import { BsDownload, BsPencil } from "react-icons/bs";
 import Image from "next/image";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export type RequestTableType = PublicType & {
   rooms: ServiceType;
@@ -41,6 +43,7 @@ const RequestTable: FC<Props> = ({
   onChangeStatus,
   onDeleteImage,
 }) => {
+  const { data: session } = useSession();
   const RequestColumns = useMemo<Column<RequestTableType>[]>(
     () => [
       {
@@ -105,24 +108,33 @@ const RequestTable: FC<Props> = ({
           <ActionButton
             onUpdate={() => onUpdate?.(row.id)}
             onDelete={() => onDelete?.(row?.id)}
-            // onView={() => onView?.(row.id)}
+            allowedEditRoles={["SUPER_ADMIN", "ADMIN", "STAFF"]}
+            allowedDeleteRoles={["SUPER_ADMIN", "ADMIN", "STAFF"]}
           >
-            <button
-              onClick={() =>
-                onChangeStatus?.(row?.id, row?.status, row?.services)
-              }
-              className="w-full text-cyan-600 text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
-            >
-              <BsPencil /> Ubah Status
-            </button>
-            <Link
-              className="w-full text-indigo-700 text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
-              href={row?.purpose ?? ""}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <BsDownload /> Download Dokumen
-            </Link>
+            {(session?.user.role === "APPROVER" ||
+              session?.user.role === "SUPER_ADMIN") && (
+              <button
+                onClick={() =>
+                  onChangeStatus?.(row?.id, row?.status, row?.services)
+                }
+                className="w-full text-cyan-600 text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+              >
+                <BsPencil /> Ubah Status
+              </button>
+            )}
+            {(session?.user.role === "APPROVER" ||
+              session?.user.role === "SUPER_ADMIN" ||
+              session?.user.role === "STAFF" ||
+              session?.user.role === "ADMIN") && (
+              <Link
+                className="w-full text-indigo-700 text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                href={row?.purpose ?? ""}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <BsDownload /> Download Dokumen
+              </Link>
+            )}
           </ActionButton>
         ),
       },

@@ -17,7 +17,6 @@ type FetchArgs = {
 
 export function useServices() {
   const queryParams = useGetParams();
-  console.log({ queryParams });
 
   return useQuery<BaseApiResponse<PublicType[]>>({
     queryKey: ["Services", queryParams],

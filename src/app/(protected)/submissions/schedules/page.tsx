@@ -13,14 +13,14 @@ import { handleErrorResponse } from "@/utils/handleErrorResponse";
 import Swal from "sweetalert2";
 import TitleContent from "@/components/layouts/TitleContent";
 import { toDatetimeLocal } from "@/utils/dateTime";
+import { useSession } from "next-auth/react";
 
 const Scheduless = () => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [dataSelect, setDataSelect] = useState<Partial<PublicType>>();
   const { data, isLoading, isError } = useSchedules();
+  const session = useSession();
   const deleteSchedules = useDeleteSchedules();
-
-  console.log("render Scheduless");
 
   useEffect(() => {
     if (isError) {
@@ -89,7 +89,12 @@ const Scheduless = () => {
   return (
     <div className="p-4">
       <TitleContent
-        titleButton="+ Jadwal"
+        titleButton={
+          session?.data?.user?.role === "SUPER_ADMIN" ||
+          session?.data?.user?.role === "ADMIN"
+            ? "+ Jadwal"
+            : ""
+        }
         title="Informasi Jadwal"
         onClickButton={() => setIsModalOpen(true)}
       />

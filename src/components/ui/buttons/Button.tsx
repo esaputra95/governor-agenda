@@ -40,7 +40,7 @@ const buttonVariants = cva(
         color: "error",
         variant: "solid",
         className:
-          "text-white bg-red-600 hover:bg-red-700  focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-700",
+          "text-white bg-red-600 hover:bg-red-700  focus:ring-red-300 dark:bg-red-400 dark:hover:bg-red-600 dark:focus:ring-red-700",
       },
       {
         color: "warning",
@@ -138,7 +138,7 @@ const Button: FC<ButtonProps> = ({
       disabled={isLoading || disabled}
     >
       {props.children}
-      {isLoading && <Spinner />}
+      {isLoading && <Spinner color="#fff" />}
     </button>
   );
 };

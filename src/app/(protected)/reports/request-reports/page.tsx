@@ -6,14 +6,21 @@ import apiUrl from "@/lib/apiUrl";
 import { DataReportType, reportSchema, ReportType } from "@/types/reportType";
 import { cn } from "@/utils/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
+import dayjs from "dayjs";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 
 const RequestReport = () => {
   const [data, setData] = useState<DataReportType[]>();
   const mutate = useGetReport(apiUrl.requestReports);
+  const startOfMonth = dayjs().startOf("month").format("YYYY-MM-DD");
+  const endOfMonth = dayjs().endOf("month").format("YYYY-MM-DD");
   const { register, watch } = useForm<ReportType>({
     resolver: zodResolver(reportSchema),
+    defaultValues: {
+      endAt: startOfMonth,
+      startAt: endOfMonth,
+    },
   });
 
   const handleOnClick = async (start: string, end: string) => {

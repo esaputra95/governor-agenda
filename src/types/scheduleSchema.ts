@@ -13,7 +13,7 @@ export const SchedulesTypeEnum = z.enum(["Schedules", "room"]);
 export const SchedulesSchema = z.object({
   id: z.string().optional(),
   userId: z.string().min(1, { message: "Pengguna/Pegawai wajib diisi" }),
-  userOption: OptionSelectSchema,
+  userOption: OptionSelectSchema.optional(),
   description: z.string().trim().max(DESC_MAX).nullable().optional(),
   startAt: z.string().min(1, { message: "Waktu kegiatan tidak boleh kosong" }),
   endAt: z.string().min(1, { message: "Waktu kegiatan tidak boleh kosong" }),

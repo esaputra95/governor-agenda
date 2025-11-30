@@ -13,12 +13,12 @@ import {
   RequestChangeStatusType,
   RequestStatusType,
 } from "@/types/requestSchema";
-import { ServiceType } from "@/types/serviceSchema";
 import { handleErrorResponse } from "@/utils/handleErrorResponse";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import { useSession } from "next-auth/react";
 
 const SubmissionRequest = () => {
   const [dataStatus, setDataStatus] = useState<{
@@ -30,6 +30,7 @@ const SubmissionRequest = () => {
     };
   }>({ visible: false });
   const router = useRouter();
+  const session = useSession();
   const { data, isLoading, isError, error } = useRequests();
   const deleteRequest = useDeleteRequest();
   const deleteAttachment = useDeleteAttachmentRequest();
@@ -51,11 +52,10 @@ const SubmissionRequest = () => {
       cancelButtonColor: "#3278A0",
       confirmButtonText: "Ya, hapus!",
       cancelButtonText: "Batal",
-      showLoaderOnConfirm: true, // ← loader di tombol confirm
-      allowOutsideClick: () => !Swal.isLoading(), // ← kunci modal saat loading
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
       preConfirm: async () => {
         try {
-          // bungkus mutate ke Promise biar SweetAlert tunggu sampai selesai
           await new Promise<void>((resolve, reject) => {
             deleteRequest.mutate(
               { id },
@@ -67,7 +67,7 @@ const SubmissionRequest = () => {
           });
         } catch (err) {
           Swal.showValidationMessage(handleErrorResponse(err));
-          throw err; // penting: tetap throw agar modal tidak close
+          throw err;
         }
       },
     }).then((res) => {
@@ -124,7 +124,6 @@ const SubmissionRequest = () => {
           });
         } catch (err) {
           Swal.showValidationMessage(handleErrorResponse(err));
-          throw err; // penting: tetap throw agar modal tidak close
         }
       },
     }).then((res) => {
@@ -144,7 +143,13 @@ const SubmissionRequest = () => {
       />
       <TitleContent
         title="+ Pengajuan Kegiatan"
-        titleButton="Pengajuan Kegiatan"
+        titleButton={
+          session?.data?.user?.role === "SUPER_ADMIN" ||
+          session?.data?.user?.role === "ADMIN" ||
+          session?.data?.user?.role === "STAFF"
+            ? "+ Pengajuan Kegiatan"
+            : ""
+        }
         onClickButton={() => router.push("/submissions/requests/form")}
       />
 

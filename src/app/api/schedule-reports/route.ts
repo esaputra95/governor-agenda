@@ -7,19 +7,19 @@ export async function GET(req: NextRequest) {
   const startAt = (sp.get("startAt") || "").trim();
   const endAt = (sp.get("endAt") || "").trim();
   try {
+    const startDate = startAt ? `${startAt} 00:00:00` : "";
+    const endDate = endAt ? `${endAt} 23:59:59` : "";
     const data = await prisma.schedules.findMany({
       where: {
         startAt: {
-          gte: new Date(startAt as string),
-          lte: new Date(endAt as string),
+          gte: new Date(startDate),
+          lte: new Date(endDate),
         },
       },
       include: {
         users: true,
       },
     });
-
-    console.log({ data });
 
     let response = data?.map((val) => [
       val?.users?.name ?? "",

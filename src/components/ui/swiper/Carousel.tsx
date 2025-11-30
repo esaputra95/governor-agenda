@@ -1,6 +1,9 @@
 "use client";
 
-import { Swiper, SwiperSlide } from "swiper/react";
+import { useRef } from "react";
+import { Swiper } from "swiper/react";
+import type { SwiperProps } from "swiper/react";
+import type { Swiper as SwiperCore } from "swiper";
 import { Navigation, Pagination, Autoplay, A11y } from "swiper/modules";
 
 import "swiper/css";
@@ -8,37 +11,53 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { ReactNode } from "react";
 
-type Item = {
-  id: string | number;
-  title: string;
-  description?: string;
-  image?: string;
-};
-
 interface CarouselProps {
   children: ReactNode;
-  swiperProps?: React.ComponentProps<typeof Swiper>; // ✅ tambahan props
+  swiperProps?: SwiperProps;
 }
 
 export default function Carousel({ swiperProps, children }: CarouselProps) {
+  const swiperRef = useRef<SwiperCore | null>(null);
+
+  // Ambil yang boleh di-override dari luar
+  const { breakpoints, spaceBetween, slidesPerView, ...rest } =
+    swiperProps || {};
+
+  const defaultBreakpoints: SwiperProps["breakpoints"] = {
+    640: { slidesPerView: 2 },
+    1024: { slidesPerView: 2 },
+    1280: { slidesPerView: 2 },
+  };
+
   return (
     <div className="w-full">
       <Swiper
+        // simpan instance supaya bisa dipaksa autoplay.start()
+        onSwiper={(swiper) => {
+          swiperRef.current = swiper;
+          // 🔥 PAKSA AUTOPLAY MULAI DARI AWAL
+          if (swiper.autoplay) {
+            try {
+              swiper.autoplay.start();
+            } catch {
+              // ignore error kecil kalau belum siap
+            }
+          }
+        }}
         modules={[Navigation, Pagination, Autoplay, A11y]}
         className="!px-2"
-        spaceBetween={16}
-        slidesPerView={1}
-        breakpoints={{
-          640: { slidesPerView: 2 },
-          1024: { slidesPerView: 2 },
-          1280: { slidesPerView: 2 },
-        }}
-        // navigation
+        spaceBetween={spaceBetween ?? 16}
+        slidesPerView={slidesPerView ?? 1}
+        breakpoints={breakpoints ?? defaultBreakpoints}
         pagination={{ clickable: true }}
-        autoplay={{ delay: 3000, disableOnInteraction: false }}
+        autoplay={{
+          delay: 1000,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: false,
+        }}
         a11y={{ enabled: true }}
-        loop={true}
-        {...swiperProps} // ✅ merge props tambahan
+        loop
+        {...rest}
       >
         {children}
       </Swiper>
