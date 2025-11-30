@@ -33,7 +33,7 @@ export type RequestPost = RequestFormStep1Type &
 const toDate = (v?: unknown) =>
   v instanceof Date ? v : v ? new Date(String(v)) : undefined;
 
-const RequestForm: FC = () => {
+export default function RequestForm() {
   const [dataPost, setDataPost] = useState<Partial<RequestPost>>();
   const wizRef = useRef<WizardHandle>(null);
   const router = useRouter();
@@ -213,6 +213,4 @@ const RequestForm: FC = () => {
       </div>
     </div>
   );
-};
-
-export default RequestForm;
+}
